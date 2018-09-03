@@ -20,9 +20,13 @@ class game_state(object):
                 "─┼─┼─\n" +
                 self[2][0] + "│" + self[2][1] + "│" + self[2][2] + "\n")
     
-    # Define indexing
-    def __getitem__(self, idx):
-        return self.board[idx - 1]
+    # Indexing on board
+    def __getitem__(self, pos):
+        return self.board[pos]
+
+    # Interactive prompt return
+    def __repr__(self):
+        return repr(self.board)
     
     # Define hash
     """
@@ -69,18 +73,18 @@ class game_state(object):
         diag_down = []
         diag_up   = []
         for i in range(n_row):
-            diag_down.append(self[i            ][i])
-            diag_up  .append(self[n_row - i][i])
+            diag_down.append(self[i][i])
+            diag_up  .append(self[(n_row - 1) - i][i])
         if list(set(diag_down)) in player_list:
-            return list(set(diag_down))
+            return list(set(diag_down))[0]
         if list(set(diag_up  )) in player_list:
-            return list(set(diag_up  ))
+            return list(set(diag_up  ))[0]
         
         # win-horizontal
         for row in range(n_row):
             row_values = list(set(self[row]))
             if row_values in player_list:
-                return row_values
+                return row_values[0]
         
         # win-vertical
         for col in range(n_row):
@@ -89,7 +93,7 @@ class game_state(object):
                 col_values.append(self[row][col])
             col_values = list(set(col_values)) # prob shouldn't overwrite
             if col_values in player_list:
-                return col_values
+                return col_values[0]
         
         # tie (if made it here and board is full, tie, otherwise no winner)
         flat = [item for sublist in self for item in sublist]
@@ -103,8 +107,8 @@ class game_state(object):
         find set of valid moves from current game state (i.e. empty cells)
         if game is at a terminal state, return empty list
         """
+        moves = []
         if self.winner() is None: # comparisons with None are weird
-            moves = []
             for row in range(len(self.board)):
                 for col in range(len(self.board)):
                     if self.board[row][col] == " ":
@@ -126,6 +130,7 @@ class game_state(object):
         
         return game_branch
     
+    
 import unittest
 
 
@@ -142,55 +147,53 @@ class test_game(unittest.TestCase):
                              "─┼─┼─\n"
                              " │ │ \n")
 
-        assert game.legal_moves() == [(0, 0), (0, 1), (0, 2),
-                                      (1, 0), (1, 1), (1, 2),
-                                      (2, 0), (2, 1), (2, 2)]
+        assert game.legal_moves() == [[0, 0], [0, 1], [0, 2],
+                                      [1, 0], [1, 1], [1, 2],
+                                      [2, 0], [2, 1], [2, 2]]
 
         # Opening game
-        game.move(1, 1)  # X
-        game.move(0, 2)  # O
-        game.move(1, 2)  # X
-        game.move(1, 0)  # O
-        game.move(2, 1)  # X
+        game.move(1, 1) # X
+        game.move(2, 0) # O
+        game.move(0, 1) # X
+        game.move(2, 1) # O
+        game.move(2, 2) # X
 
-        assert str(game) == (" │ │O\n"
+        assert str(game) == (" │X│ \n"
                              "─┼─┼─\n"
-                             "O│X│X\n"
+                             " │X│ \n"
                              "─┼─┼─\n"
-                             " │X│ \n")
+                             "O│O│X\n")
 
-        # Keep track of the current game state so we can some alternate end
-        # games from this point later
+        # Copy game state to branch off several tests
         game_copy1 = copy.deepcopy(game)
         game_copy2 = copy.deepcopy(game)
 
-        # End game #1
-        game.move(0, 0)  # O
-        game.move(0, 1)  # X plays a winning horizontal line
+        # Test 1 (base game)
+        game.move(1, 0) # O
+        game.move(0, 2) # X
+        game.move(0, 0) # O wins first vert
 
-        assert game.winner() == 'X'
+        assert game.winner() == "O"
 
-        # End game #2
-        game_copy1.move(0, 0)  # O
-        game_copy1.move(2, 2)  # X
-        game_copy1.move(2, 0)  # O plays a winning vertical line
+        # Test 2 (copy 1)
+        game_copy1.move(1, 0) # O
+        game_copy1.move(0, 0) # X wins descending diagonal
 
-        assert game_copy1.winner() == 'O'
+        assert game_copy1.winner() == "X"
         assert not game_copy1.legal_moves()
 
         # End game #3
-        game_copy2.move(2, 2)  # O
-        game_copy2.move(0, 0)  # X
-        game_copy2.move(0, 1)  # O
-        game_copy2.move(2, 0)  # X
+        game_copy2.move(0, 0) # O
+        game_copy2.move(1, 0) # X
+        game_copy2.move(1, 2) # O
+        game_copy2.move(0, 2) # X
         assert game_copy2.winner() == 'Tie'
         
-        assert str(game) == ("X│O│O\n"
-                             "─┼─┼─\n"
-                             "O│X│X\n"
-                             "─┼─┼─\n"
-                             "X│X│O\n")
-
+        assert str(game_copy2) == ("O│X│X\n"
+                                   "─┼─┼─\n"
+                                   "X│X│O\n"
+                                   "─┼─┼─\n"
+                                   "O│O│X\n")
 
 if __name__ == '__main__':
     unittest.main()
