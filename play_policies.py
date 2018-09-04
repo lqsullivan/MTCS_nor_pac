@@ -30,6 +30,6 @@ class random_policy(policy):
         """
         Asks game state for legal moves, randomly selects one and outputs it
         """
-        return random.choice(self.legal_moves())
+        return random.choice(state.legal_moves())
     
 # 

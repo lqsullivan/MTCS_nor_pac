@@ -52,13 +52,13 @@ class game_state(object):
         else:
             return "O"
     
-    def move(self, row, col):
+    def move(self, loc):
         """
         
         """
         print("{player} plays at ({row}, {col})".format(player = self.turn(),
-              row = row, col = col))
-        self.board[row][col] = self.turn()
+              row = loc[0], col = loc[1]))
+        self.board[loc[0]][loc[1]] = self.turn()
         print('{board}'.format(board = self))
     
     def winner(self):
@@ -115,18 +115,18 @@ class game_state(object):
                         moves.append([row, col])
         return moves
     
-    def project_move(self, row, col):
+    def project_move(self, loc):
         """
         copies the current state and makes the given move
         """
         # assert the move is a valid one
-        assert [row, col] in self.legal_moves()
+        assert [loc[0], loc[1]] in self.legal_moves()
         
         # branch the current state
         game_branch = copy.deepcopy(self)
         
         # apply move to new branch
-        game_branch.move(row, col)
+        game_branch.move(loc)
         
         return game_branch
     
@@ -152,11 +152,11 @@ class test_game(unittest.TestCase):
                                       [2, 0], [2, 1], [2, 2]]
 
         # Opening game
-        game.move(1, 1) # X
-        game.move(2, 0) # O
-        game.move(0, 1) # X
-        game.move(2, 1) # O
-        game.move(2, 2) # X
+        game.move([1, 1]) # X
+        game.move([2, 0]) # O
+        game.move([0, 1]) # X
+        game.move([2, 1]) # O
+        game.move([2, 2]) # X
 
         assert str(game) == (" │X│ \n"
                              "─┼─┼─\n"
@@ -169,24 +169,24 @@ class test_game(unittest.TestCase):
         game_copy2 = copy.deepcopy(game)
 
         # Test 1 (base game)
-        game.move(1, 0) # O
-        game.move(0, 2) # X
-        game.move(0, 0) # O wins first vert
+        game.move([1, 0]) # O
+        game.move([0, 2]) # X
+        game.move([0, 0]) # O wins first vert
 
         assert game.winner() == "O"
 
         # Test 2 (copy 1)
-        game_copy1.move(1, 0) # O
-        game_copy1.move(0, 0) # X wins descending diagonal
+        game_copy1.move([1, 0]) # O
+        game_copy1.move([0, 0]) # X wins descending diagonal
 
         assert game_copy1.winner() == "X"
         assert not game_copy1.legal_moves()
 
         # End game #3
-        game_copy2.move(0, 0) # O
-        game_copy2.move(1, 0) # X
-        game_copy2.move(1, 2) # O
-        game_copy2.move(0, 2) # X
+        game_copy2.move([0, 0]) # O
+        game_copy2.move([1, 0]) # X
+        game_copy2.move([1, 2]) # O
+        game_copy2.move([0, 2]) # X
         assert game_copy2.winner() == 'Tie'
         
         assert str(game_copy2) == ("O│X│X\n"
